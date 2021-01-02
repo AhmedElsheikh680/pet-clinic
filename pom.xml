@@ -38,13 +38,21 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <goals>install</goals>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
 
-    <!--<scm>
+    <scm>
         <developerConnection>scm:git:git@github.com:AhmedElsheikh680/pet-clinic.git</developerConnection>
       <tag>pet-clinic-0.0.1</tag>
-  </scm> -->
+  </scm>
 
 </project>
