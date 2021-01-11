@@ -39,6 +39,7 @@ public class SpecialitySDjpaService implements SpecialityService {
     @Override
     public void delete(Speciality object) {
         specialityRepository.delete(object);
+        
     }
 
     @Override
