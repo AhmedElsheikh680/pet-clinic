@@ -1,150 +1,43 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
 version: 2
 jobs:
-        build-with-docker:
-                docker:
-                        - image: circleci/openjdk:9.0.4-12
-                steps:
-                        - checkout
-                        - restore_cache:
-                                  keys:
-                                          - v1-dependencies-{{ checksum "pom.xml" }}
-                                          - v1-dependencies-
-                        - run:
-                                  command: ./mvnw -Dmaven.test.skip=true package
-                        - save_cache:
-                                  paths:
-                                          - ~/.m2
-                                  key: v1-dependencies-{{ checksum "pom.xml" }}
-        test-with-docker:
-                docker:
-                        - image: circleci/openjdk:9.0.4-12
-                steps:
-                        - checkout
-                        - restore_cache:
-                                  keys:
-                                          - v1-dependencies-{{ checksum "pom.xml" }}
-                                          - v1-dependencies-
-                        - run:
-                                  command: ./mvnw test
-                        - save_cache:
-                                  paths:
-                                          - ~/.m2
-                                  key: v1-dependencies-{{ checksum "pom.xml" }}
-        build-with-machine:
-                machine:
-                        image: ubuntu-1604:201903-01
-                steps:
-                        - checkout
-                        - restore_cache:
-                                  keys:
-                                          - v1-dependencies-{{ checksum "pom.xml" }}
-                                          - v1-dependencies-
-                        - run:
-                                  command: ./mvnw -Dmaven.test.skip=true package
-                        - save_cache:
-                                  paths:
-                                          - ~/.m2
-                                  key: v1-dependencies-{{ checksum "pom.xml" }}
-        test-with-machine:
-                machine:
-                        image: ubuntu-1604:201903-01
-                steps:
-                        - checkout
-                        - restore_cache:
-                                  keys:
-                                          - v1-dependencies-{{ checksum "pom.xml" }}
-                                          - v1-dependencies-
-                        - run:
-                                  command: ./mvnw test
-                        - save_cache:
-                                  paths:
-                                          - ~/.m2
-                                  key: v1-dependencies-{{ checksum "pom.xml" }}
-workflows:
-        build-then-test-with-docker:
-                jobs:
-                        - build-with-docker
-                        - test-with-docker:
-                                  requires:
-                                          - build-with-docker
-        build-then-test-with-machine:
-                jobs:
-                        - build-with-machine
-                        - test-with-machine:
-                                  requires:
-                                          - build-with-machine
-        version: 2
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:11-browsers-legacy
 
-# Original config.yml file:
-# version: 2.1
-# 
-# commands:
-#   restore_cache_cmd:
-#     steps:
-#       - restore_cache:
-#           keys:
-#             - v1-dependencies-{{ checksum \"pom.xml\" }}
-#             - v1-dependencies-
-#   save_cache_cmd:
-#     steps:
-#       - save_cache:
-#           paths:
-#             - ~/.m2
-#           key: v1-dependencies-{{ checksum \"pom.xml\" }}
-#   test:
-#     steps:
-#       - checkout
-#       - restore_cache_cmd
-#       - run: ./mvnw test
-#       - save_cache_cmd
-#   build:
-#     steps:
-#       - checkout
-#       - restore_cache_cmd
-#       - run: ./mvnw -Dmaven.test.skip=true package
-#       - save_cache_cmd
-# 
-# executors:
-#  docker-executor:
-#    docker:
-#      - image: circleci/openjdk:9.0.4-12
-#  machine-executor:
-#    machine:
-#      image: ubuntu-1604:201903-01
-# 
-# jobs:
-#   test-with-docker:
-#     executor: docker-executor
-#     steps:
-#       - test
-# 
-#   build-with-docker:
-#     executor: docker-executor
-#     steps:
-#       - build
-# 
-#   test-with-machine:
-#     executor: machine-executor
-#     steps:
-#       - test
-# 
-#   build-with-machine:
-#     executor: machine-executor
-#     steps:
-#       - build
-# 
-# 
-# workflows:
-#   build-then-test-with-docker:
-#     jobs:
-#       - build-with-docker
-#       - test-with-docker:
-#           requires:
-#             - build-with-docker
-# 
-#   build-then-test-with-machine:
-#     jobs:
-#       - build-with-machine
-#       - test-with-machine:
-#           requires:
-#             - build-with-machine
+    # Specify service dependencies here if necessary
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: mvn install -DskipTests
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # run tests!
+      - run: mvn integration-test
